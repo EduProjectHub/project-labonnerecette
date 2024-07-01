@@ -115,9 +115,25 @@ export const login = async (req, res) => {
     })
 
   } catch (error) {
+    return res.status(500).json({
+      status: "Error",
+      message: "Error en el login del usuarioER"
+    })
+  }
+}
+
+//---// Método para mostrar el perfil del usuario --
+export const profile = async (req, res) =>{
+  try {
+    return res.status(200).send({
+      status: "success",
+      message: "metodo existos"
+    })
+  } catch (error) {
     return res.status(500).send({
       status: "Error",
       message: "Error en el login del usuarioER"
     })
   }
 }
+
