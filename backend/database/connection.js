@@ -1,3 +1,4 @@
+// Importaciones
 import { connect } from "mongoose";
 
 const connection = async()=>{

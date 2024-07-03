@@ -35,3 +35,5 @@ const recipesSchema =  Schema({
     default: Date.now
   }
 })
+
+export default model("Recipe",recipesSchema ,"recipes");

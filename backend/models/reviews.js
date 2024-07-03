@@ -23,3 +23,5 @@ const reviewsSchema = Schema({
     default: Date.now
   }
 })
+
+export default model("Review",reviewsSchema,"reviews");

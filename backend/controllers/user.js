@@ -1,3 +1,4 @@
+// Importaciones
 import User from '../models/user.js';
 import bcrypt from 'bcrypt';
 import { createToken } from '../services/jwt.js';
@@ -125,6 +126,37 @@ export const login = async (req, res) => {
 //---// Método para mostrar el perfil del usuario --
 export const profile = async (req, res) =>{
   try {
+    // Obtener el ID del usuario desde los parámetros de la URL
+    const userId = req.params.id;
+
+     // Verificar si el ID recibido del usuario autenticado existe
+     if(!req.user || !req.user.userId){
+      return res.status(404).send({
+        status: "error",
+        message: "Usuario no autenticado"
+      });
+     }
+
+     // Buscar al usuario en la BD, excluimos la contraseña, rol, versión.
+     const userProfile = await User.findById(userId).select('-password -__v');
+
+     // Verificar si el usuario existe
+     if(!userProfile){
+      return res.status(404).send({
+        status: "error",
+        message: "Usuario no encontrado"
+      });
+     }
+
+      // Información de seguimiento - (req.user.userId = Id del usuario autenticado)
+      
+      
+      // Devolver la información del perfil del usuario
+    return res.status(200).json({
+      status: "success",
+      user: userProfile
+      
+    });
     return res.status(200).send({
       status: "success",
       message: "metodo existos"
