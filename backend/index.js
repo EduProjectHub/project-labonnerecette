@@ -3,6 +3,7 @@ import connection from './database/connection.js';
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import routerUser from './routes/user.js';
+import routerRecipes from './routes/recipes.js'
 
 //Conexion a la base de datos
 connection()
@@ -20,6 +21,8 @@ app.use(urlencoded({extended:true}));
 
 // Configurar rutas
 app.use('/api/user', routerUser)
+app.use('/api/recipes', routerRecipes)
+
 // Configurar el servidor para escuchar las peticiones HTTP
 app.listen(port,()=>{
   console.log("Conexion correcta al Servidor")
