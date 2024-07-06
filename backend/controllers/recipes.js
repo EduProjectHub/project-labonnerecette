@@ -134,7 +134,7 @@ export const recipeUser = async (req, res) => {
     let page = req.params.page ? parseInt(req.params.page, 10) : 1;
 
     // Número de usuarios que queremos mostrar por página
-    let itemsRecPage =req.query.limit ? parseInt(req.query.limit, 10): 5;
+    let itemsRecPage = req.query.limit ? parseInt(req.query.limit, 10) : 5;
 
     // Configurar las opciones de la consulta
     const options = {
@@ -151,9 +151,9 @@ export const recipeUser = async (req, res) => {
     console.log("options:", options);
 
     // Buscar las publicaciones del usuario
-    const recipes = await Recipes.paginate({author:userId}, options)
+    const recipes = await Recipes.paginate({ author: userId }, options)
 
-    if (!recipes.docs || recipes.docs.length <= 0 ){
+    if (!recipes.docs || recipes.docs.length <= 0) {
       return res.status(404).send({
         status: "error",
         message: "No hay publicaciones para mostrar"
@@ -178,3 +178,95 @@ export const recipeUser = async (req, res) => {
     });
   }
 }
+
+// Método para subir archivos (imagen) a las publicaciones que hacemos
+export const uploadMedia = async (req, res) => {
+  try {
+    // Obtener el id de la receta
+    const recipeId = req.params.id;
+
+    // Verificar si la receta existe en la base de datos antes de subir el archivo
+    const recipeExists = await Recipes.findById(recipeId);
+    if (!recipeExists) {
+      return res.status(404).send({
+        status: "error",
+        message: "No existe la receta"
+      });
+    }
+
+    // Comprobar que el archivo fue subido correctamente
+    if (!req.file) {
+      return res.status(404).send({
+        status: "error",
+        message: "La petición no incluye la imagen"
+      });
+    }
+
+    // Obtener el nombre del archivo y la extensión
+    const image = req.file.originalname;
+    const extension = path.extname(image).toLowerCase().substr(1);
+
+    // Validar la extensión del archivo
+    if (!["png", "jpg", "jpeg", "gif"].includes(extension)) {
+      fs.unlinkSync(req.file.path); // Eliminar archivo subido
+      return res.status(400).send({
+        status: "error",
+        message: "Extensión de archivo inválida. Permitido: png, jpg, jpeg, gif"
+      });
+    }
+
+    // Validar el tamaño del archivo (máximo 1MB)
+    const fileSize = req.file.size;
+    const maxFileSize = 1 * 1024 * 1024; // 1 MB
+    if (fileSize > maxFileSize) {
+      fs.unlinkSync(req.file.path); // Eliminar archivo subido
+      return res.status(400).send({
+        status: "error",
+        message: "El tamaño del archivo excede el límite máximo de 1 MB"
+      });
+    }
+
+    // Ruta del archivo actual en el sistema de archivos
+    const filePath = path.resolve("./uploads/recipes/", req.file.filename);
+
+    // Verificar si el archivo realmente existe en el sistema de archivos
+    try {
+      fs.statSync(filePath);
+    } catch (error) {
+      return res.status(404).send({
+        status: "error",
+        message: "El archivo no existe o hubo un error al verificarlo"
+      });
+    }
+
+    // Actualizar la receta con el nombre del archivo
+    const recipeUpdated = await Recipes.findByIdAndUpdate(
+      recipeId,
+      { file: req.file.filename },
+      { new: true }
+    );
+
+    if (!recipeUpdated) {
+      return res.status(500).send({
+        status: "error",
+        message: "Error al subir el archivo a la receta"
+      });
+    }
+
+    // Devolver respuesta exitosa
+    return res.status(200).send({
+      status: "success",
+      message: "Archivo subido con éxito",
+      recipe: recipeUpdated,
+      file: req.file
+    });
+
+  } catch (error) {
+    console.error("Error al subir el archivo:", error);
+    return res.status(500).send({
+      status: "error",
+      message: "Error al subir el archivo a la receta",
+      error: error.message
+    });
+  }
+};
